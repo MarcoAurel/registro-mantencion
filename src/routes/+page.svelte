@@ -1,62 +1,37 @@
 <script>
-  // 🎯 Estado de la aplicación
-  let titulo = "🔧 Sistema de Mantenimiento IT";
-  
-  // 📊 Datos de equipos
-  let equipos = [
-    {
-      id: 1,
-      tipo: 'laptop',
-      marca: 'HP',
-      modelo: 'EliteBook 840',
-      serie: 'HP001ABC',
-      cliente: 'Juan Pérez',
-      problema: 'No enciende - Posible problema de fuente',
-      estado: 'en-reparacion',
-      prioridad: 'alta',
-      tecnico: 'Carlos M.',
-      costo: 150000
-    },
-    {
-      id: 2,
-      tipo: 'desktop',
-      marca: 'Dell',
-      modelo: 'OptiPlex 7080',
-      serie: 'DELL002XYZ',
-      cliente: 'María González',
-      problema: 'Pantalla azul constante - Error de RAM',
-      estado: 'pendiente',
-      prioridad: 'media',
-      tecnico: 'Ana R.',
-      costo: 80000
-    },
-    {
-      id: 3,
-      tipo: 'printer',
-      marca: 'Canon',
-      modelo: 'PIXMA G6020',
-      serie: 'CANON003ZZZ',
-      cliente: 'Oficina Legal Soto',
-      problema: 'Atasco de papel recurrente',
-      estado: 'completado',
-      prioridad: 'baja',
-      tecnico: 'Luis T.',
-      costo: 45000
-    },
-    {
-      id: 4,
-      tipo: 'laptop',
-      marca: 'Lenovo',
-      modelo: 'ThinkPad X1',
-      serie: 'LENOVO004AAA',
-      cliente: 'Roberto Silva',
-      problema: 'Teclado no responde - Líquido derramado',
-      estado: 'en-reparacion',
-      prioridad: 'alta',
-      tecnico: 'Carlos M.',
-      costo: 200000
+  // 🎨 Importaciones de transiciones (NUEVAS)
+  import { fade, fly, scale, slide } from 'svelte/transition';
+  import { flip } from 'svelte/animate';
+  import { quintOut } from 'svelte/easing';
+  import { onMount } from 'svelte';
+  import { supabase } from '$lib/supabase.js';
+    
+    // 🎯 Estado de la aplicación
+    let titulo = "🔧 Sistema de Mantenimiento IT";
+    
+    // 📊 Datos de equipos - AHORA DESDE SUPABASE
+    let equipos = [];
+    let cargando = true;
+    
+    // 🔄 Cargar equipos desde Supabase
+    onMount(async () => {
+      await cargarEquipos();
+    });
+    
+    async function cargarEquipos() {
+      cargando = true;
+      const { data, error } = await supabase
+        .from('equipos')
+        .select('*')
+        .order('id', { ascending: true });
+      
+      if (error) {
+        console.error('Error cargando equipos:', error);
+      } else {
+        equipos = data;
+      }
+      cargando = false;
     }
-  ];
   
   // 🔍 Estado de búsqueda
     let busqueda = '';
@@ -137,13 +112,44 @@ $: equiposOcultos = totalEquipos - equiposMostrados;
     return colores[prioridad] || 'text-gray-600 bg-gray-100';
   }
   
-  // 🔄 Función para cambiar estado
-  function cambiarEstado(equipoId, nuevoEstado) {
-    equipos = equipos.map(equipo => 
-      equipo.id === equipoId 
-        ? { ...equipo, estado: nuevoEstado }
-        : equipo
-    );
+  // 🔄 Nueva función para cambiar estado en Supabase
+  async function cambiarEstado(equipoId, nuevoEstado) {
+    // 📤 Actualizar en Supabase
+    const { data, error } = await supabase
+      .from('equipos')
+      .update({ estado: nuevoEstado })
+      .eq('id', equipoId)
+      .select();
+    
+    if (error) {
+      console.error('Error actualizando estado:', error);
+      return;
+    }
+    
+    // 🔄 Recargar equipos para reflejar el cambio
+    await cargarEquipos();
+  }
+
+  // 🗑️ Función para eliminar equipo
+  async function eliminarEquipo(equipoId) {
+    // 🤔 Confirmar eliminación
+    if (!confirm('¿Estás seguro de eliminar este equipo? Esta acción no se puede deshacer.')) {
+      return;
+    }
+    
+    // 📤 Eliminar de Supabase
+    const { error } = await supabase
+      .from('equipos')
+      .delete()
+      .eq('id', equipoId);
+    
+    if (error) {
+      console.error('Error eliminando equipo:', error);
+      return;
+    }
+    
+    // 🔄 Recargar equipos
+    await cargarEquipos();
   }
 
   // 🆕 Estado del formulario
@@ -161,35 +167,52 @@ $: equiposOcultos = totalEquipos - equiposMostrados;
     costo: 0
   };
   
-  // 🔄 Función para agregar equipo
-  function agregarEquipo() {
-    // 🎯 Crear nuevo equipo con ID único
-    const equipoCompleto = {
-      ...nuevoEquipo,
-      id: Date.now(), // ID temporal usando timestamp
-      costo: parseInt(nuevoEquipo.costo) || 0
-    };
-    
-    // ➕ Añadir al array de equipos
-    equipos = [...equipos, equipoCompleto];
-    
-    // 🧹 Limpiar formulario
-    nuevoEquipo = {
-      tipo: 'laptop',
-      marca: '',
-      modelo: '',
-      serie: '',
-      cliente: '',
-      problema: '',
-      estado: 'pendiente',
-      prioridad: 'media',
-      tecnico: '',
-      costo: 0
-    };   
-    
-    // 🚪 Cerrar modal
-    mostrarFormulario = false;
+  // 🔄 Nueva función para agregar equipo a Supabase
+async function agregarEquipo() {
+  // 🎯 Crear objeto con datos del formulario
+  const nuevoEquipoData = {
+    tipo: nuevoEquipo.tipo,
+    marca: nuevoEquipo.marca,
+    modelo: nuevoEquipo.modelo,
+    serie: nuevoEquipo.serie,
+    cliente: nuevoEquipo.cliente,
+    problema: nuevoEquipo.problema,
+    estado: nuevoEquipo.estado,
+    prioridad: nuevoEquipo.prioridad,
+    tecnico: nuevoEquipo.tecnico,
+    costo: parseInt(nuevoEquipo.costo) || 0
+  };
+  
+  // 📤 Insertar en Supabase
+  const { data, error } = await supabase
+    .from('equipos')
+    .insert([nuevoEquipoData])
+    .select();
+  
+  if (error) {
+    console.error('Error agregando equipo:', error);
+    return;
   }
+  
+  // 🔄 Recargar equipos para mostrar el nuevo
+  await cargarEquipos();
+  
+  // 🧹 Limpiar formulario y cerrar modal
+  nuevoEquipo = {
+    tipo: 'laptop',
+    marca: '',
+    modelo: '',
+    serie: '',
+    cliente: '',
+    problema: '',
+    estado: 'pendiente',
+    prioridad: 'media',
+    tecnico: '',
+    costo: 0
+  };
+  
+  mostrarFormulario = false;
+}
   
   // 🚫 Función para cancelar
   function cancelarFormulario() {
@@ -451,7 +474,12 @@ $: equiposOcultos = totalEquipos - equiposMostrados;
       
       <!-- 🔄 Loop de Svelte - ¡Aquí está la magia! -->
       {#each equiposFiltrados as equipo (equipo.id)}
-        <div class="rounded-lg shadow-lg p-6 border-l-4 {getColorEstado(equipo.estado)} {darkMode ? 'bg-gray-800' : 'bg-white'}">
+        <div 
+          class="rounded-lg shadow-lg p-6 border-l-4 {getColorEstado(equipo.estado)} {darkMode ? 'bg-gray-800' : 'bg-white'}"
+          in:fly="{{ x: -50, duration: 300, delay: 100 }}"
+          out:fade="{{ duration: 200 }}"
+          animate:flip="{{ duration: 300 }}"
+        >
           
           <!-- Header del equipo -->
           <div class="flex justify-between items-start mb-4">
@@ -491,6 +519,13 @@ $: equiposOcultos = totalEquipos - equiposMostrados;
                 >
                   🔧 Iniciar
                 </button>
+
+                <button 
+                  on:click={() => eliminarEquipo(equipo.id)}
+                  class="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
+                >
+                  🗑️ Eliminar
+  </button>
               {/if}
               
               {#if equipo.estado === 'en-reparacion'}
