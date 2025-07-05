@@ -2,7 +2,7 @@
   // 🎯 Estado de la aplicación
   let titulo = "🔧 Sistema de Mantenimiento IT";
   
-  // 📊 Datos de equipos (basado en tu código React)
+  // 📊 Datos de equipos
   let equipos = [
     {
       id: 1,
@@ -121,9 +121,9 @@ $: equiposOcultos = totalEquipos - equiposMostrados;
   
   function getColorEstado(estado) {
     const colores = {
-      'pendiente': 'border-yellow-400 bg-yellow-50',
-      'en-reparacion': 'border-blue-400 bg-blue-50',
-      'completado': 'border-green-400 bg-green-50'
+      'pendiente': 'border-yellow-400',
+      'en-reparacion': 'border-blue-400',
+      'completado': 'border-green-400'
     };
     return colores[estado] || 'border-gray-400 bg-gray-50';
   }
@@ -224,10 +224,10 @@ $: equiposOcultos = totalEquipos - equiposMostrados;
 
    <div class="flex items-center gap-3">
     <!-- 🌙 Toggle Dark Mode -->
-    <button 
-      on:click={toggleDarkMode}
-      class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg font-medium transition-colors flex items-center gap-2"
-    >
+        <button 
+          on:click={toggleDarkMode}
+          class="px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 {darkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-200' : 'bg-gray-200 hover:bg-gray-300 text-gray-800'}"
+        >
       {darkMode ? '☀️ Light' : '🌙 Dark'}
     </button>
   
@@ -278,19 +278,19 @@ $: equiposOcultos = totalEquipos - equiposMostrados;
 
     <!-- 📊 Barra de Estado Inteligente -->
     {#if hayFiltrosActivos}
-    <div class="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+    <div class="mb-4 rounded-lg p-4 {darkMode ? 'bg-gray-700 border border-gray-600' : 'bg-blue-50 border border-blue-200'}">
         <div class="flex justify-between items-center">
         <div class="flex items-center gap-3">
-            <span class="text-blue-700 font-medium">
+          <span class="font-medium {darkMode ? 'text-gray-200' : 'text-blue-700'}">
             🔍 {numeroFiltrosActivos} filtro{numeroFiltrosActivos !== 1 ? 's' : ''} activo{numeroFiltrosActivos !== 1 ? 's' : ''}
             </span>
-            <span class="text-sm text-blue-600">
-            Mostrando {equiposMostrados} de {totalEquipos} equipos
+            <span class="text-sm {darkMode ? 'text-gray-300' : 'text-blue-600'}">
+              Mostrando {equiposMostrados} de {totalEquipos} equipos
             </span>
             {#if equiposOcultos > 0}
-            <span class="text-sm text-blue-500">
+              <span class="text-sm {darkMode ? 'text-gray-400' : 'text-blue-500'}">
                 ({equiposOcultos} oculto{equiposOcultos !== 1 ? 's' : ''})
-            </span>
+              </span>
             {/if}
         </div>
         
@@ -305,7 +305,7 @@ $: equiposOcultos = totalEquipos - equiposMostrados;
         <!-- Lista de filtros activos -->
         <div class="mt-2 flex flex-wrap gap-2">
         {#each filtrosActivos as filtro}
-            <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full font-medium">
+            <span class="px-2 py-1 text-xs rounded-full font-medium {darkMode ? 'bg-gray-600 text-gray-200' : 'bg-blue-100 text-blue-800'}">
             {filtro}
             </span>
         {/each}
@@ -365,28 +365,32 @@ $: equiposOcultos = totalEquipos - equiposMostrados;
         <button 
           on:click={() => filtroPrioridad = 'todas'}
           class="px-3 py-1 rounded-full text-sm font-medium transition-colors
-                 {filtroPrioridad === 'todas' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
+                 {filtroPrioridad === 'todas' ? 'bg-blue-600 text-white' : 
+                 darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
         >
           🎯 Todas
         </button>
         <button 
           on:click={() => filtroPrioridad = 'alta'}
           class="px-3 py-1 rounded-full text-sm font-medium transition-colors
-                 {filtroPrioridad === 'alta' ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
+                 {filtroPrioridad === 'alta' ? 'bg-red-600 text-white' : 
+                 darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
         >
           🔴 Alta
         </button>
         <button 
           on:click={() => filtroPrioridad = 'media'}
           class="px-3 py-1 rounded-full text-sm font-medium transition-colors
-                 {filtroPrioridad === 'media' ? 'bg-yellow-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
+                 {filtroPrioridad === 'media' ? 'bg-yellow-600 text-white' : 
+                 darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
         >
           🟡 Media
         </button>
         <button 
           on:click={() => filtroPrioridad = 'baja'}
           class="px-3 py-1 rounded-full text-sm font-medium transition-colors
-                 {filtroPrioridad === 'baja' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
+                 {filtroPrioridad === 'baja' ? 'bg-green-600 text-white' : 
+                 darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
         >
           🟢 Baja
         </button>
@@ -397,35 +401,40 @@ $: equiposOcultos = totalEquipos - equiposMostrados;
         <button 
           on:click={() => filtroTipo = 'todos'}
           class="px-3 py-1 rounded-full text-sm font-medium transition-colors
-                 {filtroTipo === 'todos' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
+                 {filtroTipo === 'todos' ? 'bg-blue-600 text-white' : 
+                 darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' :'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
         >
           ⚙️ Todos
         </button>
         <button 
           on:click={() => filtroTipo = 'laptop'}
           class="px-3 py-1 rounded-full text-sm font-medium transition-colors
-                 {filtroTipo === 'laptop' ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
+                 {filtroTipo === 'laptop' ? 'bg-purple-600 text-white' : 
+                 darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' :'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
         >
           💻 Laptops
         </button>
         <button 
           on:click={() => filtroTipo = 'desktop'}
           class="px-3 py-1 rounded-full text-sm font-medium transition-colors
-                 {filtroTipo === 'desktop' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
+                 {filtroTipo === 'desktop' ? 'bg-indigo-600 text-white' : 
+                 darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' :'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
         >
           🖥️ Desktops
         </button>
         <button 
           on:click={() => filtroTipo = 'printer'}
           class="px-3 py-1 rounded-full text-sm font-medium transition-colors
-                 {filtroTipo === 'printer' ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
+                 {filtroTipo === 'printer' ? 'bg-orange-600 text-white' : 
+                 darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
         >
           🖨️ Impresoras
         </button>
         <button 
           on:click={() => filtroTipo = 'tablet'}
           class="px-3 py-1 rounded-full text-sm font-medium transition-colors
-                 {filtroTipo === 'tablet' ? 'bg-pink-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
+                 {filtroTipo === 'tablet' ? 'bg-pink-600 text-white' : 
+                 darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' :'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
         >
           📱 Tablets
         </button>
@@ -436,23 +445,23 @@ $: equiposOcultos = totalEquipos - equiposMostrados;
 
     <!-- Lista de equipos -->
     <div class="space-y-4">
-      <h2 class="text-xl font-bold text-gray-900 mb-4">
+      <h2 class="text-xl font-bold mb-4 {darkMode ? 'text-white' : 'text-gray-900'}">
         📋 Equipos ({equiposFiltrados.length})
       </h2>
       
       <!-- 🔄 Loop de Svelte - ¡Aquí está la magia! -->
       {#each equiposFiltrados as equipo (equipo.id)}
-        <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 {getColorEstado(equipo.estado)}">
+        <div class="rounded-lg shadow-lg p-6 border-l-4 {getColorEstado(equipo.estado)} {darkMode ? 'bg-gray-800' : 'bg-white'}">
           
           <!-- Header del equipo -->
           <div class="flex justify-between items-start mb-4">
             <div class="flex items-center gap-3">
               <span class="text-2xl">{getIconoTipo(equipo.tipo)}</span>
               <div>
-                <h3 class="text-lg font-bold text-gray-900">
+                <h3 class="text-lg font-bold {darkMode ? 'text-white' : 'text-gray-900'}">
                   {equipo.marca} {equipo.modelo}
                 </h3>
-                <p class="text-gray-600">Cliente: {equipo.cliente}</p>
+                <p class="{darkMode ? 'text-gray-300' : 'text-gray-600'}">Cliente: {equipo.cliente}</p>
               </div>
             </div>
             
@@ -463,12 +472,12 @@ $: equiposOcultos = totalEquipos - equiposMostrados;
           
           <!-- Problema -->
           <div class="mb-4">
-            <p class="text-gray-700">{equipo.problema}</p>
+            <p class="{darkMode ? 'text-gray-300' : 'text-gray-700'}">{equipo.problema}</p>
           </div>
           
           <!-- Footer con acciones -->
           <div class="flex justify-between items-center">
-            <div class="text-sm text-gray-600">
+            <div class="text-sm {darkMode ? 'text-gray-400' : 'text-gray-600'}">
               <span>👤 {equipo.tecnico}</span>
               <span class="mx-2">•</span>
               <span>💰 ${equipo.costo.toLocaleString()}</span>
@@ -500,7 +509,7 @@ $: equiposOcultos = totalEquipos - equiposMostrados;
       
       <!-- Mensaje si no hay resultados -->
       {#if equiposFiltrados.length === 0}
-        <div class="text-center py-8 text-gray-500">
+        <div class="text-center py-8 {darkMode ? 'text-gray-400' : 'text-gray-500'}">
           🔍 No se encontraron equipos con "{busqueda}"
         </div>
       {/if}
