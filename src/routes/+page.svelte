@@ -20,13 +20,37 @@
     
     // 🔄 Cargar equipos desde Supabase
     onMount(async () => {
-  await cargarEquipos();
+      await cargarEquipos();
+    });
+    
+    async function cargarEquipos() {
+  cargando = true;
   
-  // Matrix setup
-  console.log('🟢 Iniciando Matrix ÉPICO...');
-  // ... resto del código Matrix aquí
+  
+  
+  const { data, error } = await supabase
+        .from('equipos')
+        .select('*')
+        .order('id', { ascending: true });
+      
+      if (error) {
+        console.error('Error cargando equipos:', error);
+      } else {
+        equipos = data;
+      }
+      cargando = false;
+    }
+  
+  // 🔍 Estado de búsqueda
+    let busqueda = '';
+  
+  // 🎯 Nuevos estados para filtros múltiples
+    let filtroEstado = 'todos';        // 'todos', 'pendiente', 'en-reparacion', 'completado'
+    let filtroPrioridad = 'todas';     // 'todas', 'alta', 'media', 'baja'
+    let filtroTipo = 'todos';          // 'todos', 'laptop', 'desktop', 'printer', 'tablet'
+    let darkMode = false; // Estado del modo oscuro
 
-
+    
 // 🟢 Matrix ÉPICO - Versión final
 let canvas;
 
@@ -132,41 +156,6 @@ $: if (canvas && typeof window !== 'undefined') {
     console.log('🔴 Matrix DESACTIVADO');
   }
 }
-
-
-
-});
-    
-    
-    async function cargarEquipos() {
-  cargando = true;
-  
-  
-  
-  const { data, error } = await supabase
-        .from('equipos')
-        .select('*')
-        .order('id', { ascending: true });
-      
-      if (error) {
-        console.error('Error cargando equipos:', error);
-      } else {
-        equipos = data;
-      }
-      cargando = false;
-    }
-  
-  // 🔍 Estado de búsqueda
-    let busqueda = '';
-  
-  // 🎯 Nuevos estados para filtros múltiples
-    let filtroEstado = 'todos';        // 'todos', 'pendiente', 'en-reparacion', 'completado'
-    let filtroPrioridad = 'todas';     // 'todas', 'alta', 'media', 'baja'
-    let filtroTipo = 'todos';          // 'todos', 'laptop', 'desktop', 'printer', 'tablet'
-    let darkMode = false; // Estado del modo oscuro
-
-    
-
 
 
 
@@ -864,7 +853,10 @@ async function agregarEquipo() {
 {/if}
 </main>
 
-
+<canvas 
+  bind:this={Canvas}
+  style="position: fixed; top: 0; left: 0; z-index: -1; opacity: {darkMode ? '0.8' : '0'}; transition: opacity 1s ease; pointer-events: none;"
+/>
 
 <style>
   /* CSS mínimo para que funcione */
