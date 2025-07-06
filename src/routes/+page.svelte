@@ -1,11 +1,16 @@
 <script>
   // 🎨 Importaciones de transiciones (NUEVAS)
+  import { tweened } from 'svelte/motion';
   import { fade, fly, scale, slide } from 'svelte/transition';
   import { flip } from 'svelte/animate';
   import { quintOut } from 'svelte/easing';
   import { onMount } from 'svelte';
   import { supabase } from '$lib/supabase.js';
-    
+  
+  const totalAnimado = tweened(0, { duration: 600, easing: quintOut });
+  const pendientesAnimado = tweened(0, { duration: 600, easing: quintOut });
+  const enReparacionAnimado = tweened(0, { duration: 600, easing: quintOut });
+  const completadosAnimado = tweened(0, { duration: 600, easing: quintOut });
     // 🎯 Estado de la aplicación
     let titulo = "🔧 Sistema de Mantenimiento IT";
     
@@ -15,12 +20,130 @@
     
     // 🔄 Cargar equipos desde Supabase
     onMount(async () => {
-      await cargarEquipos();
-    });
+  await cargarEquipos();
+  
+  // Matrix setup
+  console.log('🟢 Iniciando Matrix ÉPICO...');
+  // ... resto del código Matrix aquí
+
+
+// 🟢 Matrix ÉPICO - Versión final
+let canvas;
+
+onMount(() => {
+  console.log('🟢 Iniciando Matrix ÉPICO...');
+  
+  canvas = document.createElement('canvas');
+  canvas.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    pointer-events: none;
+  `;
+  
+  document.body.appendChild(canvas);
+  
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  
+  // Caracteres Matrix reales
+  const katakana = 'アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン';
+  const latin = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const nums = '0123456789';
+  const alphabet = katakana + latin + nums;
+  
+  const fontSize = 15;
+  const columns = canvas.width / fontSize;
+  const drops = [];
+  
+  // Inicializar drops
+  for (let x = 0; x < columns; x++) {
+    drops[x] = 1;
+  }
+  
+  function drawMatrix() {
+    // Fondo negro semi-transparente para efecto trail
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.04)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Color verde Matrix
+    ctx.fillStyle = '#0F0';
+    ctx.font = fontSize + 'px monospace';
+    
+    // Dibujar caracteres
+    for (let i = 0; i < drops.length; i++) {
+      // Carácter aleatorio
+      const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+      
+      // Dibujar el carácter
+      ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+      
+      // Resetear drop aleatoriamente
+      if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+        drops[i] = 0;
+      }
+      
+      // Incrementar Y position
+      drops[i]++;
+    }
+  }
+  
+  // Guardar función para control
+  window.matrixAnimation = null;
+  
+  window.startMatrixLoop = () => {
+    if (!window.matrixAnimation) {
+      // Fondo inicial negro
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Iniciar loop de animación
+      function loop() {
+        drawMatrix();
+        window.matrixAnimation = requestAnimationFrame(loop);
+      }
+      loop();
+    }
+  };
+  
+  window.stopMatrixLoop = () => {
+    if (window.matrixAnimation) {
+      cancelAnimationFrame(window.matrixAnimation);
+      window.matrixAnimation = null;
+    }
+  };
+  
+  console.log('✅ Matrix ÉPICO configurado');
+});
+
+// Control de Matrix con darkMode
+$: if (canvas && typeof window !== 'undefined') {
+  if (darkMode) {
+    canvas.style.opacity = '0.8';
+    if (window.startMatrixLoop) window.startMatrixLoop();
+    console.log('🟢 Matrix ACTIVADO');
+  } else {
+    canvas.style.opacity = '0';
+    if (window.stopMatrixLoop) window.stopMatrixLoop();
+    console.log('🔴 Matrix DESACTIVADO');
+  }
+}
+
+
+
+});
+    
     
     async function cargarEquipos() {
-      cargando = true;
-      const { data, error } = await supabase
+  cargando = true;
+  
+  
+  
+  const { data, error } = await supabase
         .from('equipos')
         .select('*')
         .order('id', { ascending: true });
@@ -42,11 +165,29 @@
     let filtroTipo = 'todos';          // 'todos', 'laptop', 'desktop', 'printer', 'tablet'
     let darkMode = false; // Estado del modo oscuro
 
+    
+
+
+
+
+
+
+
+
+
+    
+   
   // 🔄 Variables calculadas automáticamente
   $: totalEquipos = equipos.length;
   $: equiposEnReparacion = equipos.filter(e => e.estado === 'en-reparacion').length;
   $: equiposFuncionando = equipos.filter(e => e.estado === 'completado').length;
   $: equiposPendientes = equipos.filter(e => e.estado === 'pendiente').length;
+
+  // 🎯 Actualizar stores animados cuando cambien los valores
+  $: totalAnimado.set(totalEquipos);
+  $: pendientesAnimado.set(equiposPendientes);
+  $: enReparacionAnimado.set(equiposEnReparacion);
+  $: completadosAnimado.set(equiposFuncionando);
 
   // 🎯 Nuevas variables inteligentes para filtros
 $: filtrosActivos = [
@@ -231,7 +372,7 @@ async function agregarEquipo() {
 </script>
 
 
-<main class="min-h-screen p-6 transition-colors duration-300 {darkMode ? 'bg-gray-900' : 'bg-gray-50'}">
+<main class="min-h-screen p-6 transition-colors duration-300 {darkMode ? 'bg-gray-900 dark-bg' : 'bg-gray-50'} relative">
   <div class="max-w-6xl mx-auto">
     
     <!-- Header con botón mejorado -->
@@ -257,7 +398,7 @@ async function agregarEquipo() {
   <!-- 🆕 Botón para abrir formulario -->
   <button 
     on:click={() => mostrarFormulario = true}
-    class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
+    class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:scale-105 active:scale-95 flex items-center gap-2"
   >
     ➕ Nuevo Equipo
   </button>
@@ -267,22 +408,22 @@ async function agregarEquipo() {
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
       
       <div class="rounded-lg shadow-lg p-6 border-l-4 border-blue-500 {darkMode ? 'bg-gray-800' : 'bg-white'}">
-        <div class="text-3xl font-bold text-blue-600">{totalEquipos}</div>
+        <div class="text-3xl font-bold text-blue-600 transition-all duration-300">{Math.round($totalAnimado)}</div>
         <div class="{darkMode ? 'text-gray-300' : 'text-gray-600'}">Total Equipos</div>
       </div>
 
       <div class="rounded-lg shadow-lg p-6 border-l-4 border-yellow-500 {darkMode ? 'bg-gray-800' : 'bg-white'}">
-        <div class="text-3xl font-bold text-yellow-600">{equiposPendientes}</div>
+        <div class="text-3xl font-bold text-blue-600 transition-all duration-300">{Math.round($pendientesAnimado)}</div>
         <div class="{darkMode ? 'text-gray-300' : 'text-gray-600'}">Pendientes</div>
       </div>
 
       <div class="rounded-lg shadow-lg p-6 border-l-4 border-orange-500 {darkMode ? 'bg-gray-800' : 'bg-white'}">
-        <div class="text-3xl font-bold text-orange-600">{equiposEnReparacion}</div>
+        <div class="text-3xl font-bold text-blue-600 transition-all duration-300">{Math.round($enReparacionAnimado)}</div>
         <div class="{darkMode ? 'text-gray-300' : 'text-gray-600'}">En Reparación</div>
       </div>
 
       <div class="rounded-lg shadow-lg p-6 border-l-4 border-green-500 {darkMode ? 'bg-gray-800' : 'bg-white'}">
-        <div class="text-3xl font-bold text-green-600">{equiposFuncionando}</div>
+        <div class="text-3xl font-bold text-green-600 transition-all duration-300">{Math.round($completadosAnimado)}</div>
         <div class="{darkMode ? 'text-gray-300' : 'text-gray-600'}">Completados</div>
       </div>
       
@@ -348,33 +489,33 @@ async function agregarEquipo() {
       <div class="flex flex-wrap gap-2">
         <button 
           on:click={() => filtroEstado = 'todos'}
-          class="px-3 py-1 rounded-full text-sm font-medium transition-colors
-                {filtroEstado === 'todos' ? 'bg-blue-600 text-white' : 
-                darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
+          class="px-3 py-1 rounded-full text-sm font-medium transition-all duration-300 transform hover:scale-105
+        {filtroEstado === 'todos' ? 'bg-blue-600 text-white shadow-lg scale-105' : 
+        darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
         >
           📋 Todos
         </button>
         <button 
           on:click={() => filtroEstado = 'pendiente'}
-          class="px-3 py-1 rounded-full text-sm font-medium transition-colors
-                 {filtroEstado === 'pendiente' ? 'bg-yellow-600 text-white' : 
-                 darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
+          class="px-3 py-1 rounded-full text-sm font-medium transition-all duration-300 transform hover:scale-105
+            {filtroEstado === 'pendiente' ? 'bg-yellow-600 text-white shadow-lg scale-105' : 
+            darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
         >
           ⏳ Pendientes
         </button>
         <button 
           on:click={() => filtroEstado = 'en-reparacion'}
-          class="px-3 py-1 rounded-full text-sm font-medium transition-colors
-                 {filtroEstado === 'en-reparacion' ? 'bg-blue-600 text-white' : 
-                 darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
+          class="px-3 py-1 rounded-full text-sm font-medium transition-all duration-300 transform hover:scale-105
+          {filtroEstado === 'en-reparacion' ? 'bg-blue-600 text-white shadow-lg scale-105' : 
+            darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
         >
           🔧 En Reparación
         </button>
         <button 
           on:click={() => filtroEstado = 'completado'}
-          class="px-3 py-1 rounded-full text-sm font-medium transition-colors
-                 {filtroEstado === 'completado' ? 'bg-green-600 text-white' : 
-                 darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
+          class="px-3 py-1 rounded-full text-sm font-medium transition-all duration-300 transform hover:scale-105
+          {filtroEstado === 'completado' ? 'bg-green-600 text-white shadow-lg scale-105' : 
+          darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
         >
           ✅ Completados
         </button>
@@ -387,17 +528,17 @@ async function agregarEquipo() {
       <div class="flex flex-wrap gap-2">
         <button 
           on:click={() => filtroPrioridad = 'todas'}
-          class="px-3 py-1 rounded-full text-sm font-medium transition-colors
-                 {filtroPrioridad === 'todas' ? 'bg-blue-600 text-white' : 
-                 darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
+          class="px-3 py-1 rounded-full text-sm font-medium transition-all duration-300 transform hover:scale-105
+       {filtroPrioridad === 'todas' ? 'bg-blue-600 text-white shadow-lg scale-105' : 
+       darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
         >
           🎯 Todas
         </button>
         <button 
           on:click={() => filtroPrioridad = 'alta'}
-          class="px-3 py-1 rounded-full text-sm font-medium transition-colors
-                 {filtroPrioridad === 'alta' ? 'bg-red-600 text-white' : 
-                 darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
+          class="px-3 py-1 rounded-full text-sm font-medium transition-all duration-300 transform hover:scale-105
+       {filtroPrioridad === 'alta' ? 'bg-red-600 text-white shadow-lg scale-105' : 
+       darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
         >
           🔴 Alta
         </button>
@@ -411,9 +552,9 @@ async function agregarEquipo() {
         </button>
         <button 
           on:click={() => filtroPrioridad = 'baja'}
-          class="px-3 py-1 rounded-full text-sm font-medium transition-colors
-                 {filtroPrioridad === 'baja' ? 'bg-green-600 text-white' : 
-                 darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
+          class="px-3 py-1 rounded-full text-sm font-medium transition-all duration-300 transform hover:scale-105
+       {filtroPrioridad === 'baja' ? 'bg-green-600 text-white shadow-lg scale-105' : 
+       darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
         >
           🟢 Baja
         </button>
@@ -423,41 +564,41 @@ async function agregarEquipo() {
       <div class="flex flex-wrap gap-2">
         <button 
           on:click={() => filtroTipo = 'todos'}
-          class="px-3 py-1 rounded-full text-sm font-medium transition-colors
-                 {filtroTipo === 'todos' ? 'bg-blue-600 text-white' : 
-                 darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' :'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
+          class="px-3 py-1 rounded-full text-sm font-medium transition-all duration-300 transform hover:scale-105
+       {filtroTipo === 'todos' ? 'bg-blue-600 text-white shadow-lg scale-105' : 
+       darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' :'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
         >
           ⚙️ Todos
         </button>
         <button 
           on:click={() => filtroTipo = 'laptop'}
-          class="px-3 py-1 rounded-full text-sm font-medium transition-colors
-                 {filtroTipo === 'laptop' ? 'bg-purple-600 text-white' : 
-                 darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' :'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
+          class="px-3 py-1 rounded-full text-sm font-medium transition-all duration-300 transform hover:scale-105
+       {filtroTipo === 'laptop' ? 'bg-purple-600 text-white shadow-lg scale-105' : 
+       darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' :'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
         >
           💻 Laptops
         </button>
         <button 
           on:click={() => filtroTipo = 'desktop'}
-          class="px-3 py-1 rounded-full text-sm font-medium transition-colors
-                 {filtroTipo === 'desktop' ? 'bg-indigo-600 text-white' : 
-                 darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' :'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
+          class="px-3 py-1 rounded-full text-sm font-medium transition-all duration-300 transform hover:scale-105
+       {filtroTipo === 'desktop' ? 'bg-indigo-600 text-white shadow-lg scale-105' : 
+       darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' :'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
         >
           🖥️ Desktops
         </button>
         <button 
           on:click={() => filtroTipo = 'printer'}
-          class="px-3 py-1 rounded-full text-sm font-medium transition-colors
-                 {filtroTipo === 'printer' ? 'bg-orange-600 text-white' : 
-                 darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
+          class="px-3 py-1 rounded-full text-sm font-medium transition-all duration-300 transform hover:scale-105
+       {filtroTipo === 'printer' ? 'bg-orange-600 text-white shadow-lg scale-105' : 
+       darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
         >
           🖨️ Impresoras
         </button>
         <button 
           on:click={() => filtroTipo = 'tablet'}
-          class="px-3 py-1 rounded-full text-sm font-medium transition-colors
-                 {filtroTipo === 'tablet' ? 'bg-pink-600 text-white' : 
-                 darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' :'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
+          class="px-3 py-1 rounded-full text-sm font-medium transition-all duration-300 transform hover:scale-105
+       {filtroTipo === 'tablet' ? 'bg-pink-600 text-white shadow-lg scale-105' : 
+       darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' :'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
         >
           📱 Tablets
         </button>
@@ -471,11 +612,20 @@ async function agregarEquipo() {
       <h2 class="text-xl font-bold mb-4 {darkMode ? 'text-white' : 'text-gray-900'}">
         📋 Equipos ({equiposFiltrados.length})
       </h2>
+      <!-- 🔄 Loading States Elegantes -->
+      {#if cargando}
+        <div class="text-center py-8" in:fade="{{ duration: 300 }}">
+          <div class="animate-spin text-4xl mb-4">⚙️</div>
+          <p class="{darkMode ? 'text-gray-300' : 'text-gray-600'}">
+            Cargando equipos...
+          </p>
+        </div>
+      {:else}
       
       <!-- 🔄 Loop de Svelte - ¡Aquí está la magia! -->
       {#each equiposFiltrados as equipo (equipo.id)}
         <div 
-          class="rounded-lg shadow-lg p-6 border-l-4 {getColorEstado(equipo.estado)} {darkMode ? 'bg-gray-800' : 'bg-white'}"
+          class="rounded-lg shadow-lg p-6 border-l-4 {getColorEstado(equipo.estado)} {darkMode ? 'bg-gray-800' : 'bg-white'} transition-all duration-200 hover:shadow-xl hover:-translate-y-1 cursor-pointer"
           in:fly="{{ x: -50, duration: 300, delay: 100 }}"
           out:fade="{{ duration: 200 }}"
           animate:flip="{{ duration: 300 }}"
@@ -515,23 +665,23 @@ async function agregarEquipo() {
               {#if equipo.estado === 'pendiente'}
                 <button 
                   on:click={() => cambiarEstado(equipo.id, 'en-reparacion')}
-                  class="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                  class="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-all duration-200 hover:scale-105 active:scale-95"
                 >
                   🔧 Iniciar
                 </button>
 
                 <button 
                   on:click={() => eliminarEquipo(equipo.id)}
-                  class="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
+                  class="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700 transition-all duration-200 hover:scale-105 active:scale-95"
                 >
                   🗑️ Eliminar
-  </button>
+      </button>
               {/if}
               
               {#if equipo.estado === 'en-reparacion'}
                 <button 
                   on:click={() => cambiarEstado(equipo.id, 'completado')}
-                  class="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
+                  class="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-all duration-200 hover:scale-105 active:scale-95"
                 >
                   ✅ Completar
                 </button>
@@ -541,7 +691,7 @@ async function agregarEquipo() {
           
         </div>
       {/each}
-      
+      {/if}
       <!-- Mensaje si no hay resultados -->
       {#if equiposFiltrados.length === 0}
         <div class="text-center py-8 {darkMode ? 'text-gray-400' : 'text-gray-500'}">
@@ -553,9 +703,16 @@ async function agregarEquipo() {
   </div>
   <!-- 🎭 Modal para nuevo equipo -->
 {#if mostrarFormulario}
-  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
-      
+  <div 
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    in:fade="{{ duration: 200 }}"
+    out:fade="{{ duration: 150 }}"
+  >
+    <div 
+      class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4"
+      in:scale="{{ duration: 300, start: 0.8, easing: quintOut }}"
+      out:scale="{{ duration: 200, start: 0.8 }}"
+    >
       <!-- Header del modal -->
       <div class="flex justify-between items-center mb-6">
         <h2 class="text-xl font-bold text-gray-900">➕ Nuevo Equipo</h2>
@@ -706,3 +863,17 @@ async function agregarEquipo() {
   </div>
 {/if}
 </main>
+
+
+
+<style>
+  /* CSS mínimo para que funcione */
+  main {
+    position: relative;
+  }
+  
+  main > * {
+    position: relative;
+    z-index: 1;
+  }
+</style>
