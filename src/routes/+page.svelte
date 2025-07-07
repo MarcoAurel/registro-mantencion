@@ -5,13 +5,15 @@
 	import { flip } from 'svelte/animate';
 	import { quintOut } from 'svelte/easing';
 	import { onMount } from 'svelte';
+	// 📦 Importaciones de Supabase
 	import { supabase } from '$lib/supabase.js';
+	// 📦 Importación de componentes
+	import EquipmentCard from '../components/EquipmentCard.svelte';
+	import MetricsPanel from '../components/MetricsPanel.svelte';
+	import FilterBar from '../components/FilterBar.svelte';
+	import Header from '../components/Header.svelte';
 
-	const totalAnimado = tweened(0, { duration: 600, easing: quintOut });
-	const pendientesAnimado = tweened(0, { duration: 600, easing: quintOut });
-	const enReparacionAnimado = tweened(0, { duration: 600, easing: quintOut });
-	const completadosAnimado = tweened(0, { duration: 600, easing: quintOut });
-	// 🎯 Estado de la aplicación
+		// 🎯 Estado de la aplicación
 	let titulo = '🔧 Sistema de Mantenimiento IT';
 
 	// 📊 Datos de equipos - AHORA DESDE SUPABASE
@@ -38,6 +40,26 @@
 		}
 		cargando = false;
 	}
+
+
+  // ✨ NUEVOS: Contadores para FilterBar
+  $: contadores = {
+    // Estados
+    pendiente: equipos.filter(e => e.estado === 'pendiente').length,
+    enReparacion: equipos.filter(e => e.estado === 'en-reparacion').length,
+    completado: equipos.filter(e => e.estado === 'completado').length,
+    
+    // Prioridades
+    alta: equipos.filter(e => e.prioridad === 'alta').length,
+    media: equipos.filter(e => e.prioridad === 'media').length,
+    baja: equipos.filter(e => e.prioridad === 'baja').length,
+    
+    // Tipos
+    laptop: equipos.filter(e => e.tipo === 'laptop').length,
+    desktop: equipos.filter(e => e.tipo === 'desktop').length,
+    printer: equipos.filter(e => e.tipo === 'printer').length,
+    tablet: equipos.filter(e => e.tipo === 'tablet').length
+  };
 
 	// 🔍 Estado de búsqueda
 	let busqueda = '';
@@ -161,24 +183,8 @@
 	$: equiposFuncionando = equipos.filter((e) => e.estado === 'completado').length;
 	$: equiposPendientes = equipos.filter((e) => e.estado === 'pendiente').length;
 
-	// 🎯 Actualizar stores animados cuando cambien los valores
-	$: totalAnimado.set(totalEquipos);
-	$: pendientesAnimado.set(equiposPendientes);
-	$: enReparacionAnimado.set(equiposEnReparacion);
-	$: completadosAnimado.set(equiposFuncionando);
-
-	// 🎯 Nuevas variables inteligentes para filtros
-	$: filtrosActivos = [
-		busqueda !== '' ? 'búsqueda' : null,
-		filtroEstado !== 'todos' ? 'estado' : null,
-		filtroPrioridad !== 'todas' ? 'prioridad' : null,
-		filtroTipo !== 'todos' ? 'tipo' : null
-	].filter(Boolean); // Elimina los null
-
-	$: numeroFiltrosActivos = filtrosActivos.length;
-	$: hayFiltrosActivos = numeroFiltrosActivos > 0;
-	$: equiposMostrados = equiposFiltrados.length;
-	$: equiposOcultos = totalEquipos - equiposMostrados;
+	
+	
 
 	// 🔍 Filtro de búsqueda automático
 	$: equiposFiltrados = equipos.filter((equipo) => {
@@ -202,35 +208,7 @@
 		document.documentElement.classList.toggle('dark', darkMode);
 	}
 
-	// 🎨 Funciones helper
-	function getIconoTipo(tipo) {
-		const iconos = {
-			laptop: '💻',
-			desktop: '🖥️',
-			printer: '🖨️',
-			tablet: '📱'
-		};
-		return iconos[tipo] || '⚙️';
-	}
-
-	function getColorEstado(estado) {
-		const colores = {
-			pendiente: 'border-yellow-400',
-			'en-reparacion': 'border-blue-400',
-			completado: 'border-green-400'
-		};
-		return colores[estado] || 'border-gray-400 bg-gray-50';
-	}
-
-	function getColorPrioridad(prioridad) {
-		const colores = {
-			alta: 'text-red-600 bg-red-100',
-			media: 'text-yellow-600 bg-yellow-100',
-			baja: 'text-green-600 bg-green-100'
-		};
-		return colores[prioridad] || 'text-gray-600 bg-gray-100';
-	}
-
+	
 	// 🔄 Nueva función para cambiar estado en Supabase
 	async function cambiarEstado(equipoId, nuevoEstado) {
 		// 📤 Actualizar en Supabase
@@ -340,6 +318,32 @@
 		filtroPrioridad = 'todas';
 		filtroTipo = 'todos';
 	}
+
+  // ✨ NUEVOS: Event handlers para FilterBar
+  function handleCambioEstado(event) {
+    filtroEstado = event.detail;
+  }
+  
+  function handleCambioPrioridad(event) {
+    filtroPrioridad = event.detail;
+  }
+  
+  function handleCambioTipo(event) {
+    filtroTipo = event.detail;
+  }
+  
+  function handleLimpiarFiltros() {
+    limpiarFiltros();
+  }
+
+  function handleToggleDarkMode() {
+    toggleDarkMode();
+  }
+  
+  function handleAbrirFormulario() {
+    mostrarFormulario = true;
+  }
+
 </script>
 
 <main
@@ -347,85 +351,23 @@
 		? 'dark-bg bg-gray-900'
 		: 'bg-gray-50'} relative"
 >
-	<div class="mx-auto max-w-6xl">
-		<!-- Header con botón mejorado -->
-		<header class="mb-8 flex items-center justify-between">
-			<div>
-				<h1 class="mb-2 text-3xl font-bold {darkMode ? 'text-white' : 'text-gray-900'}">
-					{titulo}
-				</h1>
-				<p class={darkMode ? 'text-gray-300' : 'text-gray-600'}>
-					Dashboard principal de gestión de equipos
-				</p>
-			</div>
-
-			<div class="flex items-center gap-3">
-				<!-- 🌙 Toggle Dark Mode -->
-				<button
-					on:click={toggleDarkMode}
-					class="flex items-center gap-2 rounded-lg px-4 py-2 font-medium transition-colors {darkMode
-						? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
-						: 'bg-gray-200 text-gray-800 hover:bg-gray-300'}"
-				>
-					{darkMode ? '☀️ Light' : '🌙 Dark'}
-				</button>
-
-				<!-- 🆕 Botón para abrir formulario -->
-				<button
-					on:click={() => (mostrarFormulario = true)}
-					class="flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 font-medium text-white transition-all duration-200 hover:scale-105 hover:bg-blue-700 active:scale-95"
-				>
-					➕ Nuevo Equipo
-				</button>
-			</div>
-		</header>
+	<!-- ✨ NUEVO: Componente Header mobile-first -->
+		<Header 
+		{titulo}
+		{darkMode}
+		{mostrarFormulario}
+		on:toggleDarkMode={handleToggleDarkMode}
+		on:abrirFormulario={handleAbrirFormulario}
+		/>
 
 		<!-- Métricas automáticas -->
-		<div class="mb-8 grid grid-cols-1 gap-6 md:grid-cols-4">
-			<div
-				class="rounded-lg border-l-4 border-blue-500 p-6 shadow-lg {darkMode
-					? 'bg-gray-800'
-					: 'bg-white'}"
-			>
-				<div class="text-3xl font-bold text-blue-600 transition-all duration-300">
-					{Math.round($totalAnimado)}
-				</div>
-				<div class={darkMode ? 'text-gray-300' : 'text-gray-600'}>Total Equipos</div>
-			</div>
-
-			<div
-				class="rounded-lg border-l-4 border-yellow-500 p-6 shadow-lg {darkMode
-					? 'bg-gray-800'
-					: 'bg-white'}"
-			>
-				<div class="text-3xl font-bold text-blue-600 transition-all duration-300">
-					{Math.round($pendientesAnimado)}
-				</div>
-				<div class={darkMode ? 'text-gray-300' : 'text-gray-600'}>Pendientes</div>
-			</div>
-
-			<div
-				class="rounded-lg border-l-4 border-orange-500 p-6 shadow-lg {darkMode
-					? 'bg-gray-800'
-					: 'bg-white'}"
-			>
-				<div class="text-3xl font-bold text-blue-600 transition-all duration-300">
-					{Math.round($enReparacionAnimado)}
-				</div>
-				<div class={darkMode ? 'text-gray-300' : 'text-gray-600'}>En Reparación</div>
-			</div>
-
-			<div
-				class="rounded-lg border-l-4 border-green-500 p-6 shadow-lg {darkMode
-					? 'bg-gray-800'
-					: 'bg-white'}"
-			>
-				<div class="text-3xl font-bold text-green-600 transition-all duration-300">
-					{Math.round($completadosAnimado)}
-				</div>
-				<div class={darkMode ? 'text-gray-300' : 'text-gray-600'}>Completados</div>
-			</div>
-		</div>
+		<MetricsPanel 
+  			{totalEquipos}
+  				equiposPendientes={equiposPendientes}
+  				equiposEnReparacion={equiposEnReparacion}
+  				equiposFuncionando={equiposFuncionando}
+  				{darkMode}
+		/>
 
 		<!-- Barra de búsqueda -->
 		<div class="mb-6">
@@ -440,331 +382,20 @@
 			/>
 		</div>
 
-		<!-- 📊 Barra de Estado Inteligente -->
-		{#if hayFiltrosActivos}
-			<div
-				class="mb-4 rounded-lg p-4 {darkMode
-					? 'border border-gray-600 bg-gray-700'
-					: 'border border-blue-200 bg-blue-50'}"
-			>
-				<div class="flex items-center justify-between">
-					<div class="flex items-center gap-3">
-						<span class="font-medium {darkMode ? 'text-gray-200' : 'text-blue-700'}">
-							🔍 {numeroFiltrosActivos} filtro{numeroFiltrosActivos !== 1 ? 's' : ''} activo{numeroFiltrosActivos !==
-							1
-								? 's'
-								: ''}
-						</span>
-						<span class="text-sm {darkMode ? 'text-gray-300' : 'text-blue-600'}">
-							Mostrando {equiposMostrados} de {totalEquipos} equipos
-						</span>
-						{#if equiposOcultos > 0}
-							<span class="text-sm {darkMode ? 'text-gray-400' : 'text-blue-500'}">
-								({equiposOcultos} oculto{equiposOcultos !== 1 ? 's' : ''})
-							</span>
-						{/if}
-					</div>
+		
 
-					<button
-						on:click={limpiarFiltros}
-						class="flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1 text-sm font-medium text-white transition-colors hover:bg-blue-700"
-					>
-						🧹 Limpiar Todo
-					</button>
-				</div>
-
-				<!-- Lista de filtros activos -->
-				<div class="mt-2 flex flex-wrap gap-2">
-					{#each filtrosActivos as filtro}
-						<span
-							class="rounded-full px-2 py-1 text-xs font-medium {darkMode
-								? 'bg-gray-600 text-gray-200'
-								: 'bg-blue-100 text-blue-800'}"
-						>
-							{filtro}
-						</span>
-					{/each}
-				</div>
-			</div>
-		{/if}
-
-		<!-- 🎯 NUEVA SECCIÓN: Filtros Avanzados -->
-		<div class="mb-6 rounded-lg p-4 shadow-lg {darkMode ? 'bg-gray-800' : 'bg-white'}">
-			<h3 class="mb-4 text-lg font-medium {darkMode ? 'text-white' : 'text-gray-900'}">
-				🔍 Filtros Avanzados
-			</h3>
-
-			<div class="space-y-4">
-				<!-- Filtro por Estado -->
-				<div>
-					<label
-						class="mb-2 block text-sm font-medium {darkMode ? 'text-gray-300' : 'text-gray-700'}"
-						>Estado:</label
-					>
-					<div class="flex flex-wrap gap-2">
-						<button
-							on:click={() => (filtroEstado = 'todos')}
-							class="transform rounded-full px-3 py-1 text-sm font-medium transition-all duration-300 hover:scale-105
-        {filtroEstado === 'todos'
-								? 'scale-105 bg-blue-600 text-white shadow-lg'
-								: darkMode
-									? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-									: 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
-						>
-							📋 Todos
-						</button>
-						<button
-							on:click={() => (filtroEstado = 'pendiente')}
-							class="transform rounded-full px-3 py-1 text-sm font-medium transition-all duration-300 hover:scale-105
-            {filtroEstado === 'pendiente'
-								? 'scale-105 bg-yellow-600 text-white shadow-lg'
-								: darkMode
-									? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-									: 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
-						>
-							⏳ Pendientes
-						</button>
-						<button
-							on:click={() => (filtroEstado = 'en-reparacion')}
-							class="transform rounded-full px-3 py-1 text-sm font-medium transition-all duration-300 hover:scale-105
-          {filtroEstado === 'en-reparacion'
-								? 'scale-105 bg-blue-600 text-white shadow-lg'
-								: darkMode
-									? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-									: 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
-						>
-							🔧 En Reparación
-						</button>
-						<button
-							on:click={() => (filtroEstado = 'completado')}
-							class="transform rounded-full px-3 py-1 text-sm font-medium transition-all duration-300 hover:scale-105
-          {filtroEstado === 'completado'
-								? 'scale-105 bg-green-600 text-white shadow-lg'
-								: darkMode
-									? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-									: 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
-						>
-							✅ Completados
-						</button>
-					</div>
-				</div>
-
-				<!-- Filtro por Prioridad -->
-				<div>
-					<label
-						class="mb-2 block text-sm font-medium {darkMode ? 'text-gray-300' : 'text-gray-700'}"
-						>Prioridad:</label
-					>
-					<div class="flex flex-wrap gap-2">
-						<button
-							on:click={() => (filtroPrioridad = 'todas')}
-							class="transform rounded-full px-3 py-1 text-sm font-medium transition-all duration-300 hover:scale-105
-       {filtroPrioridad === 'todas'
-								? 'scale-105 bg-blue-600 text-white shadow-lg'
-								: darkMode
-									? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-									: 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
-						>
-							🎯 Todas
-						</button>
-						<button
-							on:click={() => (filtroPrioridad = 'alta')}
-							class="transform rounded-full px-3 py-1 text-sm font-medium transition-all duration-300 hover:scale-105
-       {filtroPrioridad === 'alta'
-								? 'scale-105 bg-red-600 text-white shadow-lg'
-								: darkMode
-									? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-									: 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
-						>
-							🔴 Alta
-						</button>
-						<button
-							on:click={() => (filtroPrioridad = 'media')}
-							class="rounded-full px-3 py-1 text-sm font-medium transition-colors
-                 {filtroPrioridad === 'media'
-								? 'bg-yellow-600 text-white'
-								: darkMode
-									? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-									: 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
-						>
-							🟡 Media
-						</button>
-						<button
-							on:click={() => (filtroPrioridad = 'baja')}
-							class="transform rounded-full px-3 py-1 text-sm font-medium transition-all duration-300 hover:scale-105
-       {filtroPrioridad === 'baja'
-								? 'scale-105 bg-green-600 text-white shadow-lg'
-								: darkMode
-									? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-									: 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
-						>
-							🟢 Baja
-						</button>
-						<!-- 💻 Filtro por Tipo de Equipo -->
-						<div>
-							<label
-								class="mb-2 block text-sm font-medium {darkMode
-									? 'text-gray-300'
-									: 'text-gray-700'}">Tipo de Equipo:</label
-							>
-							<div class="flex flex-wrap gap-2">
-								<button
-									on:click={() => (filtroTipo = 'todos')}
-									class="transform rounded-full px-3 py-1 text-sm font-medium transition-all duration-300 hover:scale-105
-       {filtroTipo === 'todos'
-										? 'scale-105 bg-blue-600 text-white shadow-lg'
-										: darkMode
-											? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-											: 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
-								>
-									⚙️ Todos
-								</button>
-								<button
-									on:click={() => (filtroTipo = 'laptop')}
-									class="transform rounded-full px-3 py-1 text-sm font-medium transition-all duration-300 hover:scale-105
-       {filtroTipo === 'laptop'
-										? 'scale-105 bg-purple-600 text-white shadow-lg'
-										: darkMode
-											? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-											: 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
-								>
-									💻 Laptops
-								</button>
-								<button
-									on:click={() => (filtroTipo = 'desktop')}
-									class="transform rounded-full px-3 py-1 text-sm font-medium transition-all duration-300 hover:scale-105
-       {filtroTipo === 'desktop'
-										? 'scale-105 bg-indigo-600 text-white shadow-lg'
-										: darkMode
-											? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-											: 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
-								>
-									🖥️ Desktops
-								</button>
-								<button
-									on:click={() => (filtroTipo = 'printer')}
-									class="transform rounded-full px-3 py-1 text-sm font-medium transition-all duration-300 hover:scale-105
-       {filtroTipo === 'printer'
-										? 'scale-105 bg-orange-600 text-white shadow-lg'
-										: darkMode
-											? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-											: 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
-								>
-									🖨️ Impresoras
-								</button>
-								<button
-									on:click={() => (filtroTipo = 'tablet')}
-									class="transform rounded-full px-3 py-1 text-sm font-medium transition-all duration-300 hover:scale-105
-       {filtroTipo === 'tablet'
-										? 'scale-105 bg-pink-600 text-white shadow-lg'
-										: darkMode
-											? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-											: 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
-								>
-									📱 Tablets
-								</button>
-							</div>
-						</div>
-					</div>
-				</div>
-
-				<!-- Lista de equipos -->
-				<div class="space-y-4">
-					<h2 class="mb-4 text-xl font-bold {darkMode ? 'text-white' : 'text-gray-900'}">
-						📋 Equipos ({equiposFiltrados.length})
-					</h2>
-					<!-- 🔄 Loading States Elegantes -->
-					{#if cargando}
-						<div class="py-8 text-center" in:fade={{ duration: 300 }}>
-							<div class="mb-4 animate-spin text-4xl">⚙️</div>
-							<p class={darkMode ? 'text-gray-300' : 'text-gray-600'}>Cargando equipos...</p>
-						</div>
-					{:else}
-						<!-- 🔄 Loop de Svelte - ¡Aquí está la magia! -->
-						{#each equiposFiltrados as equipo (equipo.id)}
-							<div
-								class="rounded-lg border-l-4 p-6 shadow-lg {getColorEstado(equipo.estado)} {darkMode
-									? 'bg-gray-800'
-									: 'bg-white'} cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-xl"
-								in:fly={{ x: -50, duration: 300, delay: 100 }}
-								out:fade={{ duration: 200 }}
-								animate:flip={{ duration: 300 }}
-							>
-								<!-- Header del equipo -->
-								<div class="mb-4 flex items-start justify-between">
-									<div class="flex items-center gap-3">
-										<span class="text-2xl">{getIconoTipo(equipo.tipo)}</span>
-										<div>
-											<h3 class="text-lg font-bold {darkMode ? 'text-white' : 'text-gray-900'}">
-												{equipo.marca}
-												{equipo.modelo}
-											</h3>
-											<p class={darkMode ? 'text-gray-300' : 'text-gray-600'}>
-												Cliente: {equipo.cliente}
-											</p>
-										</div>
-									</div>
-
-									<span
-										class="rounded-full px-3 py-1 text-sm font-medium {getColorPrioridad(
-											equipo.prioridad
-										)}"
-									>
-										{equipo.prioridad.toUpperCase()}
-									</span>
-								</div>
-
-								<!-- Problema -->
-								<div class="mb-4">
-									<p class={darkMode ? 'text-gray-300' : 'text-gray-700'}>{equipo.problema}</p>
-								</div>
-
-								<!-- Footer con acciones -->
-								<div class="flex items-center justify-between">
-									<div class="text-sm {darkMode ? 'text-gray-400' : 'text-gray-600'}">
-										<span>👤 {equipo.tecnico}</span>
-										<span class="mx-2">•</span>
-										<span>💰 ${equipo.costo.toLocaleString()}</span>
-									</div>
-
-									<div class="flex gap-2">
-										{#if equipo.estado === 'pendiente'}
-											<button
-												on:click={() => cambiarEstado(equipo.id, 'en-reparacion')}
-												class="rounded bg-blue-600 px-3 py-1 text-sm text-white transition-all duration-200 hover:scale-105 hover:bg-blue-700 active:scale-95"
-											>
-												🔧 Iniciar
-											</button>
-
-											<button
-												on:click={() => eliminarEquipo(equipo.id)}
-												class="rounded bg-red-600 px-3 py-1 text-sm text-white transition-all duration-200 hover:scale-105 hover:bg-red-700 active:scale-95"
-											>
-												🗑️ Eliminar
-											</button>
-										{/if}
-
-										{#if equipo.estado === 'en-reparacion'}
-											<button
-												on:click={() => cambiarEstado(equipo.id, 'completado')}
-												class="rounded bg-green-600 px-3 py-1 text-sm text-white transition-all duration-200 hover:scale-105 hover:bg-green-700 active:scale-95"
-											>
-												✅ Completar
-											</button>
-										{/if}
-									</div>
-								</div>
-							</div>
-						{/each}
-					{/if}
-					<!-- Mensaje si no hay resultados -->
-					{#if equiposFiltrados.length === 0}
-						<div class="py-8 text-center {darkMode ? 'text-gray-400' : 'text-gray-500'}">
-							🔍 No se encontraron equipos con "{busqueda}"
-						</div>
-					{/if}
-				</div>
-			</div>
+		<!-- ✨ NUEVO: Componente FilterBar mobile-first -->
+<FilterBar 
+  bind:filtroEstado
+  bind:filtroPrioridad  
+  bind:filtroTipo
+  {contadores}
+  {darkMode}
+  on:cambioEstado={handleCambioEstado}
+  on:cambioPrioridad={handleCambioPrioridad}
+  on:cambioTipo={handleCambioTipo}
+  on:limpiarFiltros={handleLimpiarFiltros}
+/>
 			<!-- 🎭 Modal para nuevo equipo -->
 			{#if mostrarFormulario}
 				<div
@@ -905,16 +536,11 @@
 					</div>
 				</div>
 			{/if}
-		</div>
-	</div>
+		
+	
 </main>
 
-<canvas
-	bind:this={Canvas}
-	style="position: fixed; top: 0; left: 0; z-index: -1; opacity: {darkMode
-		? '0.8'
-		: '0'}; transition: opacity 1s ease; pointer-events: none;"
-/>
+
 
 <style>
 	/* CSS mínimo para que funcione */
