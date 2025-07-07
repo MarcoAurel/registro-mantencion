@@ -8,10 +8,7 @@
   export let onEliminar;
   export let darkMode = false;
   
-  // Estado local para animaciones
-  let isPressed = false;
-  
-  // Funciones helper (las movemos aquí desde +page.svelte)
+  // Funciones helper
   function getIconoTipo(tipo) {
     const iconos = {
       'laptop': '💻',
@@ -32,20 +29,14 @@
   }
 </script>
 
-<!-- 📱 CARD MOBILE-FIRST -->
+<!-- 📱 CARD SIMPLE Y FUNCIONAL -->
 <div 
-  class="equipment-card {darkMode ? 'dark' : ''}"
-  class:pressed={isPressed}
+  class="card-container {darkMode ? 'dark' : ''}"
   in:fly="{{ y: 50, duration: 300, delay: 100 }}"
   out:scale="{{ duration: 200, start: 0.8 }}"
-  on:touchstart={() => isPressed = true}
-  on:touchend={() => isPressed = false}
-  on:mousedown={() => isPressed = true}
-  on:mouseup={() => isPressed = false}
-  on:mouseleave={() => isPressed = false}
 >
   
-  <!-- 📱 HEADER MOBILE -->
+  <!-- Header -->
   <div class="card-header">
     <div class="equipment-info">
       <div class="equipment-icon">
@@ -64,29 +55,29 @@
     </div>
   </div>
   
-  <!-- 📱 PROBLEMA SECTION -->
+  <!-- Problema -->
   <div class="problem-section">
     <p class="problem-text">{equipo.problema}</p>
   </div>
   
-  <!-- 📱 FOOTER MOBILE -->
+  <!-- Footer -->
   <div class="card-footer">
     <div class="tech-cost-info">
       <span class="tech-info">🔧 {equipo.tecnico}</span>
       <span class="cost-info">💰 ${equipo.costo.toLocaleString()}</span>
     </div>
     
-    <!-- 📱 BOTONES TOUCH-FRIENDLY -->
+    <!-- Botones -->
     <div class="action-buttons">
       {#if equipo.estado === 'pendiente'}
         <button 
-          class="btn-primary"
+          class="btn btn-primary"
           on:click={() => onCambiarEstado(equipo.id, 'en-reparacion')}
         >
           🔧 Iniciar
         </button>
         <button 
-          class="btn-danger"
+          class="btn btn-danger"
           on:click={() => onEliminar(equipo.id)}
         >
           🗑️
@@ -95,7 +86,7 @@
       
       {#if equipo.estado === 'en-reparacion'}
         <button 
-          class="btn-success"
+          class="btn btn-success"
           on:click={() => onCambiarEstado(equipo.id, 'completado')}
         >
           ✅ Completar
@@ -106,37 +97,28 @@
 </div>
 
 <style>
-  /* 📱 MOBILE-FIRST CSS */
-  .equipment-card {
+  .card-container {
     background: white;
     border-radius: 16px;
     padding: 20px;
     margin-bottom: 16px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    border: 2px solid transparent;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    overflow: hidden;
+    border: 2px solid #e5e7eb;
+    transition: all 0.2s ease;
   }
   
-  .equipment-card:hover {
+  .card-container:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
     border-color: #3b82f6;
   }
   
-  .equipment-card.pressed {
-    transform: scale(0.98);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  }
-  
-  .equipment-card.dark {
+  .card-container.dark {
     background: #1f2937;
     border-color: #374151;
     color: white;
   }
   
-  /* 📱 HEADER MOBILE */
   .card-header {
     display: flex;
     justify-content: space-between;
@@ -160,7 +142,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
   }
   
   .equipment-details {
@@ -186,10 +167,8 @@
     font-size: 12px;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
   }
   
-  /* 📱 PROBLEMA SECTION */
   .problem-section {
     background: rgba(59, 130, 246, 0.05);
     border-radius: 12px;
@@ -203,7 +182,6 @@
     line-height: 1.4;
   }
   
-  /* 📱 FOOTER MOBILE */
   .card-footer {
     display: flex;
     flex-direction: column;
@@ -217,23 +195,20 @@
     opacity: 0.8;
   }
   
-  /* 📱 BOTONES TOUCH-FRIENDLY */
   .action-buttons {
     display: flex;
     gap: 8px;
   }
   
-  .action-buttons button {
+  .btn {
     flex: 1;
-    min-height: 44px; /* 📱 Minimum touch target */
+    min-height: 44px;
     border: none;
     border-radius: 12px;
     font-weight: 600;
     font-size: 14px;
     cursor: pointer;
     transition: all 0.2s ease;
-    position: relative;
-    overflow: hidden;
   }
   
   .btn-primary {
@@ -252,25 +227,16 @@
     min-width: 44px;
   }
   
-  .action-buttons button:active {
-    transform: scale(0.96);
-  }
-  
-  .action-buttons button:hover {
+  .btn:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   }
   
-  /* 📱 DARK MODE */
-  .equipment-card.dark .problem-section {
+  .btn:active {
+    transform: scale(0.96);
+  }
+  
+  .card-container.dark .problem-section {
     background: rgba(59, 130, 246, 0.1);
-  }
-  
-  .equipment-card.dark .equipment-title {
-    color: #f9fafb;
-  }
-  
-  .equipment-card.dark .client-name {
-    color: #d1d5db;
   }
 </style>

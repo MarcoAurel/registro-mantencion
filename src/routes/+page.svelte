@@ -65,10 +65,10 @@
 	let busqueda = '';
 
 	// 🎯 Nuevos estados para filtros múltiples
-	let filtroEstado = 'todos'; // 'todos', 'pendiente', 'en-reparacion', 'completado'
-	let filtroPrioridad = 'todas'; // 'todas', 'alta', 'media', 'baja'
-	let filtroTipo = 'todos'; // 'todos', 'laptop', 'desktop', 'printer', 'tablet'
-	let darkMode = false; // Estado del modo oscuro
+	let filtroEstado = 'todos';
+	let filtroPrioridad = 'todas'; 
+	let filtroTipo = 'todos';
+	let darkMode = false; 
 
 	// 🟢 Matrix ÉPICO - Versión final
 	let canvas;
@@ -382,20 +382,57 @@
 			/>
 		</div>
 
-		
-
 		<!-- ✨ NUEVO: Componente FilterBar mobile-first -->
-<FilterBar 
-  bind:filtroEstado
-  bind:filtroPrioridad  
-  bind:filtroTipo
-  {contadores}
-  {darkMode}
-  on:cambioEstado={handleCambioEstado}
-  on:cambioPrioridad={handleCambioPrioridad}
-  on:cambioTipo={handleCambioTipo}
-  on:limpiarFiltros={handleLimpiarFiltros}
-/>
+	<FilterBar 
+		bind:filtroEstado
+		bind:filtroPrioridad  
+		bind:filtroTipo
+		{contadores}
+		{darkMode}
+		on:cambioEstado={handleCambioEstado}
+		on:cambioPrioridad={handleCambioPrioridad}
+		on:cambioTipo={handleCambioTipo}
+		on:limpiarFiltros={handleLimpiarFiltros}
+	/>
+
+
+
+<!-- ✨ SECCIÓN DE EQUIPOS RECONSTRUIDA -->
+<div class="space-y-4">
+  <h2 class="text-xl font-bold mb-4 {darkMode ? 'text-white' : 'text-gray-900'}">
+    📋 Equipos ({equiposFiltrados.length})
+  </h2>
+  
+ 
+  
+  <!-- 🔄 Loading States -->
+  {#if cargando}
+    <div class="text-center py-8">
+      <div class="animate-spin text-4xl mb-4">⚙️</div>
+      <p class="{darkMode ? 'text-gray-300' : 'text-gray-600'}">
+        Cargando equipos...
+      </p>
+    </div>
+  {:else}
+    
+    <!-- ✨ Lista de equipos con EquipmentCard -->
+    {#each equiposFiltrados as equipo (equipo.id)}
+      <EquipmentCard 
+        {equipo}
+        {darkMode}
+        onCambiarEstado={cambiarEstado}
+        onEliminar={eliminarEquipo}
+      />
+    {/each}
+  {/if}
+  
+  <!-- Mensaje si no hay resultados -->
+  {#if equiposFiltrados.length === 0 && !cargando}
+    <div class="text-center py-8 {darkMode ? 'text-gray-400' : 'text-gray-500'}">
+      🔍 No se encontraron equipos con los filtros actuales
+    </div>
+  {/if}
+</div>
 			<!-- 🎭 Modal para nuevo equipo -->
 			{#if mostrarFormulario}
 				<div
